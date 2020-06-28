@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t hok/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true hok/react-test npm run test
+
+after_success:
+  - docker build -t hokennethk/multi-client ./client
+  - docker build -t hokennethk/multi-nginx ./nginx
+  - docker build -t hokennethk/multi-server ./server
+  - docker build -t hokennethk/multi-worker ./worker
+  # log into docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin docker.io
+  # Take images and push to docker hub
+  - docker push hokennethk/multi-client
+  - docker push hokennethk/multi-nginx
+  - docker push hokennethk/multi-server
+  - docker push hokennethk/multi-worker
